@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Applicant Dossier — College & Scholarship Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A41;
+    --parchment:#F4EFE3;
+    --parchment-2:#ECE4D2;
+    --brass:#B08D57;
+    --brass-dark:#8C6D3F;
+    --crimson:#7A2E2E;
+    --forest:#3F6247;
+    --slate:#5C6773;
+    --line:#D9CDB2;
+    --white:#FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    line-height:1.5;
+  }
+  h1,h2,h3{ font-family:'Source Serif 4', serif; font-weight:700; margin:0; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .wrap{ max-width:920px; margin:0 auto; padding:28px 20px 80px; }
+
+  /* Header */
+  .masthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:3px double var(--brass); padding-bottom:14px; margin-bottom:6px;
+  }
+  .masthead .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--brass-dark); display:block; margin-bottom:4px;
+  }
+  .masthead h1{ font-size:30px; }
+  .masthead .sub{ color:var(--slate); font-size:12.5px; text-align:right; max-width:220px; }
+
+  /* Tabs styled as folder tabs */
+  .tabs{ display:flex; gap:4px; margin:22px 0 0; }
+  .tab{
+    font-family:'IBM Plex Mono', monospace; font-size:11.5px; letter-spacing:.05em;
+    text-transform:uppercase; padding:9px 16px 8px; cursor:pointer;
+    background:var(--parchment-2); color:var(--slate); border:1px solid var(--line);
+    border-bottom:none; border-radius:6px 6px 0 0; position:relative; top:1px;
+  }
+  .tab.active{ background:var(--white); color:var(--ink); font-weight:600; border-color:var(--brass); }
+  .panel{
+    background:var(--white); border:1px solid var(--brass); border-radius:0 8px 8px 8px;
+    padding:26px 26px 30px;
+  }
+  .panel[hidden]{ display:none; }
+
+  section.block{ margin-bottom:26px; }
+  section.block:last-child{ margin-bottom:0; }
+  .block h3{ font-size:16px; border-bottom:1px solid var(--line); padding-bottom:8px; margin-bottom:14px; }
+  .block h3 .tag{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--brass-dark); margin-left:8px; letter-spacing:.05em;}
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+  label{ display:block; font-size:12.5px; color:var(--slate); margin-bottom:5px; font-weight:500; }
+  input[type=text], input[type=number], select, textarea{
+    width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:5px;
+    background:var(--parchment); font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+  }
+  textarea{ resize:vertical; min-height:56px; }
+  input:focus, select:focus, textarea:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .field{ margin-bottom:12px; }
+  .hint{ font-size:11.5px; color:var(--slate); margin-top:4px; }
+
+  .range-row{ display:flex; align-items:center; gap:10px; }
+  .range-row input[type=range]{ flex:1; accent-color:var(--brass-dark); }
+  .range-val{ width:26px; text-align:center; font-family:'IBM Plex Mono',monospace; font-weight:600; }
+
+  .school-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; align-items:end; margin-bottom:10px; }
+  .school-row .rm{ background:none; border:1px solid var(--crimson); color:var(--crimson); border-radius:5px; padding:8px 10px; cursor:pointer; font-size:12px; height:38px;}
+
+  button.btn{
+    font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:.06em; font-size:12px;
+    background:var(--ink); color:var(--white); border:none; border-radius:6px; padding:12px 20px; cursor:pointer;
+  }
+  button.btn:hover{ background:var(--brass-dark); }
+  button.btn.secondary{ background:none; color:var(--ink); border:1px solid var(--ink); }
+  button.btn.secondary:hover{ background:var(--parchment-2); }
+  button.btn.ghost{ background:none; color:var(--slate); border:1px solid var(--line); font-size:11px; padding:7px 12px;}
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:22px; }
+  button.add-row{ background:none; border:1px dashed var(--brass); color:var(--brass-dark); border-radius:5px; padding:8px 12px; cursor:pointer; font-size:12.5px; }
+
+  /* Score dials */
+  .score-hero{ display:flex; gap:26px; align-items:center; flex-wrap:wrap; margin-bottom:24px; }
+  .dial{ position:relative; width:128px; height:128px; flex-shrink:0; }
+  .dial svg{ transform:rotate(-90deg); }
+  .dial .num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .dial .num .n{ font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:600; }
+  .dial .num .l{ font-size:10px; color:var(--slate); text-transform:uppercase; letter-spacing:.06em; }
+  .hero-text h2{ font-size:20px; margin-bottom:6px; }
+  .hero-text p{ color:var(--slate); font-size:13.5px; max-width:480px; }
+
+  .cat-bar-row{ margin-bottom:12px; }
+  .cat-bar-label{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+  .cat-bar-label .name{ font-weight:600; }
+  .cat-bar-label .score{ font-family:'IBM Plex Mono',monospace; color:var(--slate); }
+  .cat-bar-track{ height:7px; background:var(--parchment-2); border-radius:4px; overflow:hidden; }
+  .cat-bar-fill{ height:100%; border-radius:4px; }
+
+  .risk-item{ border:1px solid var(--line); border-radius:7px; padding:12px 14px; margin-bottom:10px; }
+  .risk-item .rh{ display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+  .risk-item .rh .name{ font-weight:600; font-size:13.5px; }
+  .chip{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:.04em; }
+  .chip.low{ background:#E4EEE5; color:var(--forest); }
+  .chip.med{ background:#F5EAD4; color:var(--brass-dark); }
+  .chip.high{ background:#F3E1DF; color:var(--crimson); }
+  .risk-item p{ font-size:12.5px; color:var(--slate); margin:0; }
+
+  table.schools{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.schools th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--slate); border-bottom:1px solid var(--line); padding:6px 8px; }
+  table.schools td{ padding:9px 8px; border-bottom:1px solid var(--parchment-2); vertical-align:top; }
+  table.schools tr:last-child td{ border-bottom:none; }
+
+  .sch-card{ border:1px solid var(--line); border-radius:7px; padding:14px 16px; margin-bottom:12px; }
+  .sch-card .top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .sch-card .top h4{ font-family:'Source Serif 4',serif; font-size:16px; margin:0; }
+  .sch-card .meta{ font-size:12px; color:var(--slate); margin-bottom:8px; }
+  .sch-card .steps{ font-size:13px; }
+  .sch-card .steps li{ margin-bottom:3px; }
+
+  .plan-item{ display:flex; gap:12px; border-bottom:1px solid var(--parchment-2); padding:12px 0; }
+  .plan-item:last-child{ border-bottom:none; }
+  .plan-item .idx{ font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--brass-dark); flex-shrink:0; width:22px; }
+  .plan-item .body h4{ font-size:14px; font-family:'Inter',sans-serif; font-weight:600; margin-bottom:3px; }
+  .plan-item .body p{ font-size:13px; color:var(--slate); margin:0; }
+
+  .saved-row{ display:flex; justify-content:space-between; align-items:center; border:1px solid var(--line); border-radius:7px; padding:10px 14px; margin-bottom:8px; }
+  .saved-row .info .nm{ font-weight:600; font-size:14px; }
+  .saved-row .info .dt{ font-size:11.5px; color:var(--slate); }
+  .saved-row .actions{ display:flex; gap:8px; }
+
+  .empty{ text-align:center; padding:40px 20px; color:var(--slate); }
+  .empty .glyph{ font-size:34px; margin-bottom:10px; }
+
+  .disclaimer{ font-size:11.5px; color:var(--slate); border-top:1px solid var(--line); margin-top:26px; padding-top:14px; }
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--white); padding:10px 20px; border-radius:6px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <span class="eyebrow">AcceptedX-style Applicant Dossier</span>
+      <h1>College &amp; Scholarship Planner</h1>
+    </div>
+    <div class="sub">A reusable worksheet — save a profile, revisit it as things change, run it again for another student or another year.</div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-tab="intake">1 · Intake</div>
+    <div class="tab" data-tab="report">2 · Report</div>
+    <div class="tab" data-tab="scholarships">3 · Scholarships</div>
+    <div class="tab" data-tab="plan">4 · Action Plan</div>
+    <div class="tab" data-tab="saved">Saved Files</div>
+  </div>
+
+  <div class="panel" id="panel-intake">
+    <section class="block">
+      <h3>Student &amp; Target Schools <span class="tag">basics</span></h3>
+      <div class="grid2">
+        <div class="field"><label>Student name (this is how the profile is saved)</label>
+          <input type="text" id="studentName" placeholder="e.g. Rachael Palowski"></div>
+        <div class="field"><label>Intended major / career path</label>
+          <input type="text" id="major" placeholder="e.g. Aerospace Engineering"></div>
+      </div>
+      <label>Schools she is considering — add each with its rough acceptance rate and your honest read of it</label>
+      <div id="schoolRows"></div>
+      <button class="add-row" id="addSchoolBtn" type="button">+ add a school</button>
+    </section>
+
+    <section class="block">
+      <h3>Academics <span class="tag">40 pts</span></h3>
+      <div class="grid3">
+        <div class="field"><label>Unweighted GPA (out of 4.0)</label>
+          <input type="number" id="gpa" step="0.01" min="0" max="4" placeholder="3.85"></div>
+        <div class="field"><label>Test score (SAT 400–1600 or ACT 1–36)</label>
+          <input type="number" id="testScore" placeholder="1420"></div>
+        <div class="field"><label>Test type</label>
+          <select id="testType"><option value="sat">SAT</option><option value="act">ACT</option><option value="none">Not submitting scores</option></select></div>
+      </div>
+      <div class="field"><label>Course rigor (APs / IBs / honors relative to what's offered)</label>
+        <div class="range-row"><input type="range" id="rigor" min="1" max="5" value="3" data-range="rigor"><span class="range-val" id="rigorVal">3</span></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h3>Extracurriculars <span class="tag">30 pts</span></h3>
+      <div class="grid2">
+        <div class="field"><label>Leadership — depth of roles held (clubs, teams, orgs)</label>
+          <div class="range-row"><input type="range" id="leadership" min="1" max="5" value="3" data-range="leadership"><span class="range-val" id="leadershipVal">3</span></div></div>
+        <div class="field"><label>Passion project — originality &amp; sustained effort</label>
+          <div class="range-row"><input type="range" id="passion" min="1" max="5" value="3" data-range="passion"><span class="range-val" id="passionVal">3</span></div></div>
+        <div class="field"><label>Internships / research / shadowing — relevance &amp; depth</label>
+          <div class="range-row"><input type="range" id="internship" min="1" max="5" value="3" data-range="internship"><span class="range-val" id="internshipVal">3</span></div></div>
+        <div class="field"><label>Community service — hours &amp; impact, not just attendance</label>
+          <div class="range-row"><input type="range" id="service" min="1" max="5" value="3" data-range="service"><span class="range-val" id="serviceVal">3</span></div></div>
+      </div>
+      <div class="field"><label>Briefly describe her strongest activity (used to tailor the plan)</label>
+        <textarea id="topActivity" placeholder="e.g. Built and flew a payload for a high-altitude balloon club she co-founded"></textarea></div>
+    </section>
+
+    <section class="block">
+      <h3>Her Story <span class="tag">30 pts</span></h3>
+      <div class="grid2">
+        <div class="field"><label>Personal essay — current draft strength</label>
+          <div class="range-row"><input type="range" id="essay" min="1" max="5" value="3" data-range="essay"><span class="range-val" id="essayVal">3</span></div></div>
+        <div class="field"><label>Letters of recommendation — how well do recommenders know her</label>
+          <div class="range-row"><input type="range" id="lor" min="1" max="5" value="3" data-range="lor"><span class="range-val" id="lorVal">3</span></div></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <h3>Context for Scholarships <span class="tag">optional, improves accuracy</span></h3>
+      <div class="grid3">
+        <div class="field"><label>Home state</label><input type="text" id="state" placeholder="e.g. Texas"></div>
+        <div class="field"><label>Demonstrated financial need</label>
+          <select id="need"><option value="none">None indicated</option><option value="some">Some</option><option value="significant">Significant</option></select></div>
+        <div class="field"><label>First-generation college student?</label>
+          <select id="firstgen"><option value="no">No</option><option value="yes">Yes</option></select></div>
+      </div>
+    </section>
+
+    <div class="btn-row">
+      <button class="btn" id="generateBtn" type="button">Generate Assessment →</button>
+      <button class="btn secondary" id="clearBtn" type="button">Clear form</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-report" hidden>
+    <div id="reportEmpty" class="empty">
+      <div class="glyph">📋</div>
+      <div>Fill out the intake tab and generate an assessment to see the report.</div>
+    </div>
+    <div id="reportBody" hidden>
+      <div class="score-hero">
+        <div class="dial"><svg width="128" height="128" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r="54" fill="none" stroke="#ECE4D2" stroke-width="12"/>
+          <circle id="strengthArc" cx="64" cy="64" r="54" fill="none" stroke="#3F6247" stroke-width="12" stroke-linecap="round"/>
+        </svg><div class="num"><span class="n" id="strengthNum">0</span><span class="l">Strength</span></div></div>
+        <div class="dial"><svg width="128" height="128" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r="54" fill="none" stroke="#ECE4D2" stroke-width="12"/>
+          <circle id="riskArc" cx="64" cy="64" r="54" fill="none" stroke="#7A2E2E" stroke-width="12" stroke-linecap="round"/>
+        </svg><div class="num"><span class="n" id="riskNum">0</span><span class="l">Risk</span></div></div>
+        <div class="hero-text">
+          <h2 id="reportHeadline">Profile Overview</h2>
+          <p id="reportSummary"></p>
+        </div>
+      </div>
+
+      <section class="block">
+        <h3>Profile Strength by Category</h3>
+        <div id="strengthBars"></div>
+      </section>
+
+      <section class="block">
+        <h3>Profile Risk Factors</h3>
+        <div id="riskFactors"></div>
+      </section>
+
+      <section class="block">
+        <h3>Estimated Odds by School</h3>
+        <table class="schools">
+          <thead><tr><th>School</th><th>Published rate</th><th>Estimated band</th><th>Read</th></tr></thead>
+          <tbody id="schoolTable"></tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-scholarships" hidden>
+    <div id="schEmpty" class="empty"><div class="glyph">🎓</div><div>Generate an assessment first — scholarship fit is based on the same profile.</div></div>
+    <div id="schBody" hidden>
+      <section class="block">
+        <h3>Scholarship Outlook</h3>
+        <div id="scholarshipList"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-plan" hidden>
+    <div id="planEmpty" class="empty"><div class="glyph">🗺️</div><div>Generate an assessment first to get a tailored plan.</div></div>
+    <div id="planBody" hidden>
+      <section class="block">
+        <h3>Priority Action Plan</h3>
+        <div id="planList"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-saved" hidden>
+    <section class="block">
+      <h3>Save Current Profile</h3>
+      <div class="field" style="max-width:360px;"><label>Save under this name</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="saveName" placeholder="e.g. Rachael — July 2026">
+          <button class="btn" id="saveProfileBtn" type="button" style="flex-shrink:0;">Save</button>
+        </div>
+      </div>
+    </section>
+    <section class="block">
+      <h3>Saved Profiles</h3>
+      <div id="savedList"></div>
+    </section>
+  </div>
+
+  <div class="disclaimer">
+    This tool produces planning estimates from the inputs you provide — it is not an admissions or scholarship guarantee, and it doesn't replace a school counselor or financial aid office. Acceptance rates and scholarship odds vary year to year; verify current figures on each school's site before making decisions.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let schoolRowCount = 0;
+let lastAssessment = null;
+
+function addSchoolRow(prefill){
+  schoolRowCount++;
+  const id = 'sr'+schoolRowCount;
+  const div = document.createElement('div');
+  div.className = 'school-row';
+  div.id = id;
+  div.innerHTML = `
+    <div class="field" style="margin-bottom:0;"><label>School name</label><input type="text" class="sr-name" placeholder="e.g. Georgia Tech"></div>
+    <div class="field" style="margin-bottom:0;"><label>Accept rate %</label><input type="number" class="sr-rate" min="1" max="100" placeholder="21"></div>
+    <div class="field" style="margin-bottom:0;"><label>Your read</label>
+      <select class="sr-tier"><option value="reach">Reach</option><option value="target" selected>Target</option><option value="likely">Likely</option></select></div>
+    <button class="rm" type="button" data-remove-row="${id}">Remove</button>`;
+  document.getElementById('schoolRows').appendChild(div);
+  if(prefill){
+    div.querySelector('.sr-name').value = prefill.name || '';
+    div.querySelector('.sr-rate').value = prefill.rate || '';
+    div.querySelector('.sr-tier').value = prefill.tier || 'target';
+  }
+}
+function syncRange(id){ document.getElementById(id+'Val').textContent = document.getElementById(id).value; }
+
+// Event delegation for dynamically-created remove buttons (school rows)
+document.getElementById('schoolRows').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-remove-row]');
+  if(!btn) return;
+  const row = document.getElementById(btn.dataset.removeRow);
+  if(row) row.remove();
+});
+
+// Range sliders: delegate input events for all data-range inputs
+document.addEventListener('input', (e)=>{
+  if(e.target.matches('input[type="range"][data-range]')){
+    syncRange(e.target.dataset.range);
+  }
+});
+
+// Static buttons
+document.getElementById('addSchoolBtn').addEventListener('click', ()=>addSchoolRow());
+document.getElementById('generateBtn').addEventListener('click', runAssessment);
+document.getElementById('clearBtn').addEventListener('click', clearForm);
+document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+
+// Saved list load/delete (event delegation since rows are re-rendered)
+document.getElementById('savedList').addEventListener('click', (e)=>{
+  const loadBtn = e.target.closest('[data-load-id]');
+  if(loadBtn){ loadProfile(loadBtn.dataset.loadId); return; }
+  const delBtn = e.target.closest('[data-delete-id]');
+  if(delBtn){ deleteProfile(delBtn.dataset.deleteId); return; }
+});
+
+// seed with 3 rows
+addSchoolRow(); addSchoolRow(); addSchoolRow();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---------- Tabs ----------
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.tab');
+  if(!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.hidden = true);
+  document.getElementById('panel-'+tab.dataset.tab).hidden = false;
+  if(tab.dataset.tab === 'saved') renderSavedList();
+});
+
+// ---------- Read form ----------
+function readForm(){
+  const schools = [...document.querySelectorAll('.school-row')].map(r=>({
+    name: r.querySelector('.sr-name').value.trim(),
+    rate: parseFloat(r.querySelector('.sr-rate').value) || null,
+    tier: r.querySelector('.sr-tier').value
+  })).filter(s=>s.name);
+
+  return {
+    studentName: document.getElementById('studentName').value.trim(),
+    major: document.getElementById('major').value.trim(),
+    schools,
+    gpa: parseFloat(document.getElementById('gpa').value) || 0,
+    testScore: parseFloat(document.getElementById('testScore').value) || 0,
+    testType: document.getElementById('testType').value,
+    rigor: +document.getElementById('rigor').value,
+    leadership: +document.getElementById('leadership').value,
+    passion: +document.getElementById('passion').value,
+    internship: +document.getElementById('internship').value,
+    service: +document.getElementById('service').value,
+    topActivity: document.getElementById('topActivity').value.trim(),
+    essay: +document.getElementById('essay').value,
+    lor: +document.getElementById('lor').value,
+    state: document.getElementById('state').value.trim(),
+    need: document.getElementById('need').value,
+    firstgen: document.getElementById('firstgen').value
+  };
+}
+
+function writeForm(d){
+  document.getElementById('studentName').value = d.studentName || '';
+  document.getElementById('major').value = d.major || '';
+  document.getElementById('schoolRows').innerHTML = '';
+  schoolRowCount = 0;
+  (d.schools && d.schools.length ? d.schools : [{},{},{}]).forEach(s=>addSchoolRow(s));
+  document.getElementById('gpa').value = d.gpa || '';
+  document.getElementById('testScore').value = d.testScore || '';
+  document.getElementById('testType').value = d.testType || 'sat';
+  ['rigor','leadership','passion','internship','service','essay','lor'].forEach(k=>{
+    document.getElementById(k).value = d[k] || 3;
+    syncRange(k);
+  });
+  document.getElementById('topActivity').value = d.topActivity || '';
+  document.getElementById('state').value = d.state || '';
+  document.getElementById('need').value = d.need || 'none';
+  document.getElementById('firstgen').value = d.firstgen || 'no';
+}
+
+function clearForm(){
+  writeForm({});
+  showToast('Form cleared');
+}
+
+// ---------- Scoring ----------
+function scoreAcademics(d){
+  // GPA: 0-20, scaled off 4.0
+  const gpaPts = Math.max(0, Math.min(20, (d.gpa/4.0)*20));
+  // Test score: 0-20
+  let testPts = 10; // neutral if not submitting
+  if(d.testType === 'sat' && d.testScore){
+    testPts = Math.max(0, Math.min(20, ((d.testScore-800)/800)*20));
+  } else if(d.testType === 'act' && d.testScore){
+    testPts = Math.max(0, Math.min(20, ((d.testScore-11)/25)*20));
+  }
+  const rigorBonus = (d.rigor-3)*0.6; // small nudge
+  return Math.max(0, Math.min(40, gpaPts*0.7 + testPts*0.6 + rigorBonus + 4));
+}
+function scoreEC(d){
+  const lead = (d.leadership/5)*8;
+  const pass = (d.passion/5)*8;
+  const intern = (d.internship/5)*8;
+  const serv = (d.service/5)*6;
+  return Math.max(0, Math.min(30, lead+pass+intern+serv));
+}
+function scoreStory(d){
+  const essay = (d.essay/5)*15;
+  const lor = (d.lor/5)*15;
+  return Math.max(0, Math.min(30, essay+lor));
+}
+
+function riskLevel(score, invert){
+  // score 0-100 risk-style: higher = worse. invert=true means higher input = lower risk.
+  if(score < 34) return 'low';
+  if(score < 60) return 'med';
+  return 'high';
+}
+
+function computeRisk(d, strength){
+  const factors = [];
+
+  // Choice-of-school balance risk
+  const reaches = d.schools.filter(s=>s.tier==='reach').length;
+  const likelies = d.schools.filter(s=>s.tier==='likely').length;
+  const total = d.schools.length || 1;
+  let listRisk = 20;
+  let listNote = 'Your list has a workable mix of reach, target, and likely schools.';
+  if(reaches/total > 0.6){
+    listRisk = 75;
+    listNote = 'Most of the list is reach schools. Add 1–2 likely schools where her stats sit above the middle 50% admitted range.';
+  } else if(likelies === 0){
+    listRisk = 55;
+    listNote = 'There is no clear likely school on the list yet — worth adding at least one where admission is highly probable.';
+  }
+  factors.push({name:'Choice of Schools', score:listRisk, note:listNote});
+
+  // Major competitiveness risk
+  const competitiveMajors = ['aerospace','computer science','cs','biomedical','pre-med','premed','medicine','business','nursing'];
+  const majorLower = (d.major||'').toLowerCase();
+  const isCompetitive = competitiveMajors.some(m=>majorLower.includes(m));
+  factors.push({
+    name:'Major & Career Path Competitiveness',
+    score: isCompetitive ? 62 : 30,
+    note: isCompetitive
+      ? `${d.major || 'This major'} is a high-demand field at most selective schools, which raises the bar within an already competitive applicant pool.`
+      : `${d.major || 'The stated major'} does not typically carry extra departmental competitiveness on top of general admissions.`
+  });
+
+  // Imbalance risk: academics vs EC vs story spread
+  const acad = scoreAcademics(d)/40*100;
+  const ec = scoreEC(d)/30*100;
+  const story = scoreStory(d)/30*100;
+  const spread = Math.max(acad,ec,story) - Math.min(acad,ec,story);
+  let imbalanceRisk = 20;
+  let imbalanceNote = 'Academics, activities, and application narrative are reasonably balanced.';
+  if(spread > 35){
+    imbalanceRisk = 68;
+    const weakest = [['academics',acad],['extracurriculars',ec],['essay & recommendations',story]].sort((a,b)=>a[1]-b[1])[0][0];
+    imbalanceNote = `There's a noticeable gap between her strongest area and her ${weakest}. Admissions readers notice uneven profiles more than moderate ones.`;
+  }
+  factors.push({name:'Profile Balance', score:imbalanceRisk, note:imbalanceNote});
+
+  // Application components risk (essay/LOR)
+  const appRisk = Math.max(0, 100 - ((d.essay+d.lor)/10*100));
+  factors.push({
+    name:'Essay & Recommendation Strength',
+    score: appRisk,
+    note: appRisk > 55
+      ? 'The essay and/or letters need real attention — these are fully within your control and often move a decision more than one more activity would.'
+      : 'Essay and recommendations are in reasonable shape, though another revision pass rarely hurts.'
+  });
+
+  const avgRisk = factors.reduce((a,f)=>a+f.score,0)/factors.length;
+  return {factors, overall: Math.round(avgRisk)};
+}
+
+function estimateOdds(school, strength, risk){
+  if(!school.rate) return {band:'Unknown', note:'Add a published acceptance rate for a real estimate.'};
+  let base = school.rate;
+  // adjust base by strength/risk relative to a "typical" 80-strength / 40-risk applicant
+  const strengthAdj = (strength-70)*0.5;
+  const riskAdj = -(risk-40)*0.35;
+  let est = base + strengthAdj + riskAdj;
+  est = Math.max(2, Math.min(95, est));
+  let band, note;
+  if(est < 15){ band='Low (<15%)'; note='True reach — worth applying if it is a genuine favorite, but should not anchor the list.'; }
+  else if(est < 35){ band='Moderate (15–35%)'; note='Reach with a real shot, especially if essays and recommendations are strong.'; }
+  else if(est < 60){ band='Good (35–60%)'; note='Solid target — her profile is competitive here.'; }
+  else { band='Strong (60%+)'; note='Likely school — a good anchor for the list.'; }
+  return {band, note, est: Math.round(est)};
+}
+
+// ---------- Scholarships ----------
+function buildScholarships(d, strength){
+  const list = [];
+  const gpaPctl = d.gpa >= 3.9 ? 'top' : d.gpa >= 3.6 ? 'upper' : 'mid';
+  const majorLower = (d.major||'').toLowerCase();
+
+  // Merit-based institutional
+  let meritProb = strength >= 85 ? 'Strong' : strength >= 65 ? 'Moderate' : 'Low';
+  list.push({
+    name: 'Institutional Merit Scholarships',
+    who: 'Offered directly by the universities on her list',
+    prob: meritProb,
+    note: 'Most schools auto-consider every admitted student for merit aid based on GPA and test scores — no separate application needed, though some require an honors college essay.',
+    steps: ['Check each schools financial aid page for merit thresholds and any required honors college application', 'If test-optional, submitting a strong score can unlock merit tiers that superscores alone do not']
+  });
+
+  // National Merit
+  if(d.testType === 'sat' && d.testScore){
+    const nmProb = d.testScore >= 1420 ? 'Worth investigating' : 'Unlikely at current score';
+    list.push({
+      name: 'National Merit Scholarship Program',
+      who: 'Based on PSAT/NMSQT Selection Index, not the SAT directly',
+      prob: nmProb,
+      note: 'Cutoffs vary by state and are usually in the top 1% of PSAT takers.',
+      steps: ['Confirm her PSAT Selection Index score from junior year', 'If she is a Semifinalist or Finalist, list it on every application — some schools stack additional scholarship money on top']
+    });
+  }
+
+  // Major-specific
+  if(majorLower.includes('aerospace') || majorLower.includes('engineering')){
+    list.push({
+      name: 'Aerospace & Engineering-Specific Awards',
+      who: 'AIAA Foundation Undergraduate Scholarships, Women in Aviation International, NASA-affiliated undergraduate scholarship programs, SWE scholarships if applicable',
+      prob: strength >= 70 ? 'Good fit' : 'Apply, but strengthen the portfolio first',
+      note: 'These reward demonstrated passion-project work more heavily than pure GPA — a documented build, competition, or research project matters a lot here.',
+      steps: [d.topActivity ? `Feature "${d.topActivity}" prominently in these applications with photos or a short writeup` : 'Document her strongest hands-on project with photos, data, or a short writeup before applying', 'Apply early — many of these have fall deadlines well before college applications are due']
+    });
+  }
+
+  // Need-based
+  if(d.need !== 'none'){
+    list.push({
+      name: 'Need-Based Grants & Aid',
+      who: 'FAFSA/CSS Profile-driven aid from each school, plus outside need-based scholarships',
+      prob: d.need === 'significant' ? 'Strong eligibility likely' : 'Worth filing',
+      note: 'This is separate from merit aid and is usually the largest dollar source for eligible families.',
+      steps: ['File the FAFSA (and CSS Profile if any private schools require it) as early as the window allows', 'Search for state-specific need-based grants tied to her home state']
+    });
+  }
+
+  // First-gen
+  if(d.firstgen === 'yes'){
+    list.push({
+      name: 'First-Generation Student Scholarships',
+      who: 'Many universities and outside foundations run dedicated first-gen scholarship tracks',
+      prob: 'Good fit',
+      note: 'These often come with mentoring or support programs alongside the funding.',
+      steps: ['Ask each admissions office directly whether they have a first-gen scholarship or support track', 'Search "[state] first generation scholarship" and her intended major together']
+    });
+  }
+
+  // Community/leadership
+  if(d.service >= 4 || d.leadership >= 4){
+    list.push({
+      name: 'Community & Leadership Scholarships',
+      who: 'Local Rotary/Kiwanis/community foundation awards, employer-affiliated scholarships, leadership-specific national awards',
+      prob: 'Good fit',
+      note: 'These are less competitive nationally because fewer students apply, and they reward exactly what she has already built.',
+      steps: ['Ask her school counselor for a list of local scholarships — these have far less competition than national ones', 'Reuse her essay content across several of these; most ask similar questions']
+    });
+  }
+
+  return list;
+}
+
+// ---------- Action plan ----------
+function buildPlan(d, strength, risk){
+  const items = [];
+  const acad = scoreAcademics(d)/40*100;
+  const ec = scoreEC(d)/30*100;
+  const story = scoreStory(d)/30*100;
+
+  const ranked = [
+    {area:'essay', score: (d.essay/5)*100, title:'Revise the personal essay', body:'This is the highest-leverage, fastest-to-fix piece of the application. Aim for a specific, sensory scene rather than a summary of accomplishments — a counselor or English teacher can give a second read.'},
+    {area:'lor', score: (d.lor/5)*100, title:'Brief her recommenders', body:'Give recommenders a short one-page "brag sheet" with specifics from her strongest project — it makes for a more concrete, less generic letter.'},
+    {area:'list', score: 100 - (d.schools.some(s=>s.tier==='likely')?0:60), title:'Balance the school list', body:'Add at least one likely school with published stats clearly below her own, so the list is not weighted entirely toward reaches.'},
+    {area:'ec', score: ec, title:'Deepen the strongest activity', body: d.topActivity ? `Push "${d.topActivity}" further — a competition entry, a published writeup, or a mentor endorsement turns a good activity into a standout one.` : 'Pick her single strongest activity and add a concrete, visible outcome to it — a competition, a publication, or a public presentation.'},
+    {area:'acad', score: acad, title:'Shore up testing or GPA', body: d.testType==='none' ? 'If a strong score would help at her target schools, a focused retake could open up merit money even at test-optional schools.' : 'If there is room before applications are due, a focused retake can meaningfully move both admissions odds and merit scholarship tiers.'},
+    {area:'scholarship-timing', score: 40, title:'Build a scholarship deadline calendar', body:'Outside scholarships often close months before college applications — start a simple spreadsheet of deadlines now so nothing is missed.'}
+  ].sort((a,b)=>a.score-b.score);
+
+  ranked.slice(0,5).forEach(r=>items.push(r));
+  return items;
+}
+
+// ---------- Run assessment ----------
+function runAssessment(){
+  const d = readForm();
+  if(!d.studentName){
+    showToast('Add a student name so you can save this profile');
+  }
+  const acadScore = scoreAcademics(d);
+  const ecScore = scoreEC(d);
+  const storyScore = scoreStory(d);
+  const strength = Math.round(acadScore + ecScore + storyScore);
+  const risk = computeRisk(d, strength);
+
+  lastAssessment = {d, acadScore, ecScore, storyScore, strength, risk};
+  renderReport();
+  renderScholarships();
+  renderPlan();
+
+  // switch to report tab
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('[data-tab="report"]').classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.hidden = true);
+  document.getElementById('panel-report').hidden = false;
+}
+
+function arcDash(pct){
+  const c = 2*Math.PI*54;
+  return `${(pct/100)*c} ${c}`;
+}
+
+function renderReport(){
+  if(!lastAssessment) return;
+  document.getElementById('reportEmpty').hidden = true;
+  document.getElementById('reportBody').hidden = false;
+  const {d, acadScore, ecScore, storyScore, strength, risk} = lastAssessment;
+
+  document.getElementById('strengthNum').textContent = strength;
+  document.getElementById('riskNum').textContent = risk.overall;
+  document.getElementById('strengthArc').setAttribute('stroke-dasharray', arcDash(strength));
+  document.getElementById('riskArc').setAttribute('stroke-dasharray', arcDash(risk.overall));
+
+  document.getElementById('reportHeadline').textContent = `${d.studentName || 'This profile'}${d.major ? ' — ' + d.major : ''}`;
+  document.getElementById('reportSummary').textContent =
+    `Strength score reflects academics, activities, and application narrative together. Risk score flags where the profile or school list could work against her — lower is better on risk, unlike strength.`;
+
+  const bars = [
+    {name:'Academics', val:acadScore, max:40, color:'#3F6247'},
+    {name:'Extracurriculars', val:ecScore, max:30, color:'#B08D57'},
+    {name:'Her Story', val:storyScore, max:30, color:'#1B2A41'}
+  ];
+  document.getElementById('strengthBars').innerHTML = bars.map(b=>`
+    <div class="cat-bar-row">
+      <div class="cat-bar-label"><span class="name">${b.name}</span><span class="score mono">${Math.round(b.val)}/${b.max}</span></div>
+      <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${(b.val/b.max)*100}%; background:${b.color};"></div></div>
+    </div>`).join('');
+
+  document.getElementById('riskFactors').innerHTML = risk.factors.map(f=>{
+    const lvl = riskLevel(f.score);
+    return `<div class="risk-item">
+      <div class="rh"><span class="name">${f.name}</span><span class="chip ${lvl}">${lvl==='low'?'Low risk':lvl==='med'?'Moderate risk':'High risk'}</span></div>
+      <p>${f.note}</p>
+    </div>`;
+  }).join('');
+
+  const rows = d.schools.map(s=>{
+    const odds = estimateOdds(s, strength, risk.overall);
+    return `<tr><td>${s.name}</td><td class="mono">${s.rate ? s.rate+'%' : '—'}</td><td class="mono">${odds.band}</td><td>${odds.note}</td></tr>`;
+  }).join('');
+  document.getElementById('schoolTable').innerHTML = rows || '<tr><td colspan="4">Add schools on the Intake tab.</td></tr>';
+}
+
+function renderScholarships(){
+  if(!lastAssessment) return;
+  document.getElementById('schEmpty').hidden = true;
+  document.getElementById('schBody').hidden = false;
+  const {d, strength} = lastAssessment;
+  const list = buildScholarships(d, strength);
+  document.getElementById('scholarshipList').innerHTML = list.map(s=>`
+    <div class="sch-card">
+      <div class="top"><h4>${s.name}</h4><span class="chip ${s.prob.toLowerCase().includes('strong')||s.prob.toLowerCase().includes('good')?'low':s.prob.toLowerCase().includes('moderate')||s.prob.toLowerCase().includes('worth')?'med':'high'}">${s.prob}</span></div>
+      <div class="meta">${s.who}</div>
+      <p style="font-size:13px; margin:0 0 8px;">${s.note}</p>
+      <ul class="steps">${s.steps.map(x=>`<li>${x}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+function renderPlan(){
+  if(!lastAssessment) return;
+  document.getElementById('planEmpty').hidden = true;
+  document.getElementById('planBody').hidden = false;
+  const {d, strength, risk} = lastAssessment;
+  const plan = buildPlan(d, strength, risk);
+  document.getElementById('planList').innerHTML = plan.map((p,i)=>`
+    <div class="plan-item">
+      <div class="idx">${String(i+1).padStart(2,'0')}</div>
+      <div class="body"><h4>${p.title}</h4><p>${p.body}</p></div>
+    </div>`).join('');
+}
+
+// ---------- Persistence ----------
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,60); }
+
+async function saveProfile(){
+  const name = document.getElementById('saveName').value.trim() || readForm().studentName;
+  if(!name){ showToast('Enter a name to save under'); return; }
+  const id = slugify(name) + '-' + Date.now();
+  const data = readForm();
+  try{
+    await window.storage.set('profile:'+id, JSON.stringify({name, data, savedAt: new Date().toISOString()}));
+    let idx = [];
+    try{ const r = await window.storage.get('profile-index'); idx = JSON.parse(r.value); }catch(e){ idx = []; }
+    idx.push({id, name, savedAt: new Date().toISOString()});
+    await window.storage.set('profile-index', JSON.stringify(idx));
+    showToast('Saved "'+name+'"');
+    document.getElementById('saveName').value = '';
+    renderSavedList();
+  }catch(e){
+    showToast('Could not save — try again');
+    console.error(e);
+  }
+}
+
+async function renderSavedList(){
+  const container = document.getElementById('savedList');
+  container.innerHTML = '<div class="hint">Loading…</div>';
+  let idx = [];
+  try{
+    const r = await window.storage.get('profile-index');
+    idx = JSON.parse(r.value);
+  }catch(e){ idx = []; }
+  if(!idx.length){
+    container.innerHTML = '<div class="empty"><div class="glyph">🗂️</div><div>No saved profiles yet. Save one above to reuse it later, or for another student.</div></div>';
+    return;
+  }
+  idx = idx.slice().reverse();
+  container.innerHTML = idx.map(item=>`
+    <div class="saved-row">
+      <div class="info"><div class="nm">${item.name}</div><div class="dt">Saved ${new Date(item.savedAt).toLocaleDateString()} ${new Date(item.savedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div></div>
+      <div class="actions">
+        <button class="btn ghost" type="button" data-load-id="${item.id}">Load</button>
+        <button class="btn ghost" type="button" data-delete-id="${item.id}" style="border-color:#7A2E2E; color:#7A2E2E;">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function loadProfile(id){
+  try{
+    const r = await window.storage.get('profile:'+id);
+    const parsed = JSON.parse(r.value);
+    writeForm(parsed.data);
+    showToast('Loaded "'+parsed.name+'"');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelector('[data-tab="intake"]').classList.add('active');
+    document.querySelectorAll('.panel').forEach(p=>p.hidden = true);
+    document.getElementById('panel-intake').hidden = false;
+  }catch(e){
+    showToast('Could not load that profile');
+    console.error(e);
+  }
+}
+
+async function deleteProfile(id){
+  try{
+    await window.storage.delete('profile:'+id);
+    let idx = [];
+    try{ const r = await window.storage.get('profile-index'); idx = JSON.parse(r.value); }catch(e){ idx = []; }
+    idx = idx.filter(x=>x.id!==id);
+    await window.storage.set('profile-index', JSON.stringify(idx));
+    showToast('Deleted');
+    renderSavedList();
+  }catch(e){
+    showToast('Could not delete');
+    console.error(e);
+  }
+}
+</script>
+</body>
+</html>
